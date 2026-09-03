@@ -1,0 +1,18 @@
+includes:
+  - base.yaml
+model:
+  model_name: SMGNN
+ood:
+  ood_alg: SMGNN
+  ood_param: 1            # outer multiplier; effective lambda = ood_param * coeff
+  extra_param:
+    - false
+    - 10
+    - 0.01               # decay_interval=10, final_r=0.01 (kept from D.1.1 SST2P SMGNN)
+train:
+  l_norm_coeff: 0.1      # lambda_spars = 1 * 0.1 = 0.1  (Section 6 / D.3 = D.1.1 SST2P)
+  entr_coeff: 0.1        # lambda_entr  = 1 * 0.1 = 0.1  (Section 6 / D.3 = D.1.1 SST2P)
+log_file: exp_0
+clean_save: true
+use_norm: bn             # D.1.1/D.3 SST2P: "BatchNorm across GNN layers" -> use_norm (not readout)
+use_readout_norm: none

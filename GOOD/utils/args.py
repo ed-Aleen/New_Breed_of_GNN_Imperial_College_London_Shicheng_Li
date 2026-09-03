@@ -116,6 +116,18 @@ class CommonArgs(Tap):
 
     seeds: str = None # Added by Steve
     mitigation_sampling: str = None # Added by Steve
+    # --- S3 (2026-08-29): per-graph normalisation of the DATA-TERM drive. -------
+    # The extractor's gradient is  dL/d ell_v = - eps_G q_G a_v sigma'(ell_v),
+    # so the class the classifier stays WRONG about longer (larger q_G) dominates.
+    # These knobs cancel or rebalance that weighting.  Default None == 'none' ==
+    # bit-identical to the untouched training loop.
+    #   invq          w_G  ~ 1/q_G                cancels the q weighting outright
+    #   classbal      each class contributes equal total weight   (imbalance control)
+    #   invq_classbal both
+    #   shuffle       the invq weights PERMUTED across the batch  (PLACEBO: same
+    #                 weight distribution, no correspondence to q)
+    drive_norm: str = None
+    drive_norm_qfloor: float = 1e-3
     mitigation_readout: str = None # Added by Steve
     mitigation_virtual: str = None # Added by Steve
     mitigation_expl_scores: str = "default" # Added by Steve

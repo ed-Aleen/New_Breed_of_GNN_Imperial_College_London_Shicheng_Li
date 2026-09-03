@@ -1,0 +1,18 @@
+includes:
+  - base.yaml
+model:
+  model_name: SMGNN
+ood:
+  ood_alg: SMGNN
+  ood_param: 1            # outer multiplier; effective lambda = ood_param * coeff
+  extra_param:
+    - false
+    - 10
+    - 0.01               # decay_interval=10, final_r=0.01 (kept from D.1.1 MUTAG SMGNN)
+train:
+  l_norm_coeff: 0.1      # lambda_spars = 1 * 0.1 = 0.1  (Section 6 / D.3 MUTAG)
+  entr_coeff: 0.8        # lambda_entr  = 1 * 0.8 = 0.8  (Section 6 / D.3 MUTAG)
+log_file: exp_0
+clean_save: true
+use_norm: none           # D.3 MUTAG SMGNN: no BatchNorm mentioned
+use_readout_norm: none

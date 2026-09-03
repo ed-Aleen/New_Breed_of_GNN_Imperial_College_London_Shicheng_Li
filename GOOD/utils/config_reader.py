@@ -292,5 +292,21 @@ def config_summoner(args: CommonArgs) -> Union[CommonArgs, Munch]:
     config, duplicate_warnings, duplicate_errors = load_config(args.config_path)
     args2config(config, args)
     config = munchify(config)
+
+    # --- S3: intervention knobs.  They live on no YAML, so args2config cannot carry them.
+    # Default "none" keeps every existing run bit-identical.
+    config.drive_norm = str(getattr(args, "drive_norm", None) or "none").lower()
+    config.drive_norm_qfloor = float(getattr(args, "drive_norm_qfloor", None) or 1e-3)
+    _valid = {"none", "invq", "classbal", "invq_classbal", "shuffle"}
+    assert config.drive_norm in _valid, \
+        f"--drive_norm must be one of {sorted(_valid)}, got {config.drive_norm!r}"
+    if config.drive_norm != "none":
+        # HARD GUARD: an intervention run must never write into the baseline ckpt dir.
+        assert getattr(args, "save_tag", None), \
+            ("--drive_norm changes the training objective; pass --save_tag as well so the "
+             "checkpoints land in their own directory and cannot overwrite the baseline.")
+        print(f"#IN# S3 INTERVENTION ACTIVE: drive_norm={config.drive_norm} "
+              f"qfloor={config.drive_norm_qfloor} save_tag={args.save_tag}")
+
     process_configs(config, args)
     return config

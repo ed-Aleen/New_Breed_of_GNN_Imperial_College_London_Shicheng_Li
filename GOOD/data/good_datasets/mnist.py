@@ -178,9 +178,16 @@ class MNIST(InMemoryDataset):
         train_set = MNIST(dataset_root + "/MNIST/", domain=domain, mode="train")
         test_set = MNIST(dataset_root + "/MNIST/", domain=domain, mode="test")
 
-        n_train_data, n_val_data = 20000, 5000
-        perm_idx = torch.randperm(len(train_set))     
-        train_val = train_set[perm_idx]   
+        # n_val_data is carved OUT of the raw train pool, so n_train_data must leave room
+        # for it. The pool historically has exactly 20000 graphs; hardcoding
+        # n_train_data=20000 alongside n_val_data=5000 made train_val[:20000] consume the
+        # ENTIRE pool while train_val[-5000:] was the tail of that same slice -> id_val was
+        # a 100% subset of train_dataset (verified: 5000/5000 identity overlap). Deriving
+        # n_train_data from the actual pool size guarantees train/id_val are disjoint.
+        n_val_data = 5000
+        n_train_data = min(20000, len(train_set) - n_val_data)
+        perm_idx = torch.randperm(len(train_set))
+        train_val = train_set[perm_idx]
 
         train_dataset = train_val[:n_train_data]
         id_val_dataset = train_val[-n_val_data:]
@@ -256,7 +263,7 @@ def list_to_torch(data):
         if data[i] is None:
             continue
         elif isinstance(data[i], np.ndarray):
-            if data[i].dtype == np.bool:
+            if data[i].dtype == np.bool_:  # PORT: np.bool removed in numpy>=1.24
                 data[i] = data[i].astype(np.float32)
             data[i] = torch.from_numpy(data[i]).float()
         elif isinstance(data[i], list):

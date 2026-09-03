@@ -385,11 +385,13 @@ class GINConvAttn(gnn.MessagePassing):
         return out
 
     def message(self, x_i, x_j):
-        if self._fixed_explain:
+        # PORT: under PyG != 2.4.0 set_masks never sets _fixed_explain, so the bare
+        # attribute access raised AttributeError on any masked forward (PyG 2.6 venv).
+        if getattr(self, '_fixed_explain', False):
             edge_mask = self._edge_mask
             if self._apply_sigmoid:
                 edge_mask = edge_mask.sigmoid()
-            x_j = x_j * edge_mask.view([-1] + [1] * (x_j.dim() - 1))        
+            x_j = x_j * edge_mask.view([-1] + [1] * (x_j.dim() - 1))
         return x_j
 
     def update(self, aggr_out):
@@ -479,7 +481,8 @@ class ACRConv(gnn.MessagePassing):
         )
     
     def message(self, x_i, x_j):
-        if self._fixed_explain and getattr(self, "_node_mask", None) is None:
+        # PORT: getattr guard — see GINConvAttn.message (PyG 2.6 AttributeError).
+        if getattr(self, '_fixed_explain', False) and getattr(self, "_node_mask", None) is None:
             exit("AIA BaseGNN message")
             edge_mask = self._edge_mask
             if self._apply_sigmoid:
@@ -544,13 +547,14 @@ class ACRConv2(ACRConv):
         )
     
     def message(self, x_i, x_j, node_mask_j):
-        if self._fixed_explain and node_mask_j is None:
+        # PORT: getattr guards — see GINConvAttn.message (PyG 2.6 AttributeError).
+        if getattr(self, '_fixed_explain', False) and node_mask_j is None:
             exit("AIA ACRConv2 message")
             edge_mask = self._edge_mask
             if self._apply_sigmoid:
                 edge_mask = edge_mask.sigmoid()
             x_j = x_j * edge_mask.view([-1] + [1] * (x_j.dim() - 1))
-        elif self._fixed_explain and node_mask_j is not None:
+        elif getattr(self, '_fixed_explain', False) and node_mask_j is not None:
             x_j = x_j * node_mask_j
         return x_j
 

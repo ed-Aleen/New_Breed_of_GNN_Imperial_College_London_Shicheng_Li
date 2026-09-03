@@ -193,9 +193,16 @@ class CPatchMNIST(InMemoryDataset):
         test_set = CPatchMNIST(dataset_root + "/CPatchMNIST/", domain=domain, mode="test")
         id_test_set = CPatchMNIST(dataset_root + "/CPatchMNIST/", domain=domain, mode="id_test")
 
-        n_train_data, n_val_data = 20000, 5000
-        perm_idx = torch.randperm(len(train_set))     
-        train_val = train_set[perm_idx]   
+        # n_val_data is carved OUT of the raw train pool, so n_train_data must leave room
+        # for it. Hardcoding n_train_data=20000 alongside n_val_data=5000 assumed the pool
+        # has >=25000 graphs; if the pool is smaller, train_val[:n_train_data] can consume
+        # (part of) the same slice as train_val[-n_val_data:], leaking id_val into train
+        # (see GOOD/data/good_datasets/mnist.py for the confirmed instance of this bug).
+        # Deriving n_train_data from the actual pool size guarantees disjointness.
+        n_val_data = 5000
+        n_train_data = min(20000, len(train_set) - n_val_data)
+        perm_idx = torch.randperm(len(train_set))
+        train_val = train_set[perm_idx]
 
         train_dataset = train_val[:n_train_data]
         id_val_dataset = train_val[-n_val_data:]
@@ -242,7 +249,7 @@ def list_to_torch(data):
         if data[i] is None:
             continue
         elif isinstance(data[i], np.ndarray):
-            if data[i].dtype == np.bool:
+            if data[i].dtype == np.bool_:  # PORT: np.bool removed in numpy>=1.24
                 data[i] = data[i].astype(np.float32)
             data[i] = torch.from_numpy(data[i]).float()
         elif isinstance(data[i], list):

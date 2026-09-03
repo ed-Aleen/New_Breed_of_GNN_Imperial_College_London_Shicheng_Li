@@ -1,0 +1,12 @@
+includes:
+  - SMGNN_sec6.yaml
+
+# --- OCC (Occurrence-Calibrated Classifier), PORTS.md experiment addition ---
+# REAL-X (Jethani et al., AISTATS 2021) transplanted at colour-class
+# granularity. Stage A: occ_stage_a.py calibrates + freezes the classifier on
+# Bern(r0) class displays. Stage B: --task train with this yaml loads occ_g0
+# (auto = <ckpt_dir>/occ_g0.ckpt) and trains the extractor against it with
+# straight-through hard displays. ALWAYS launch with --save_tag occ.
+fix_mask_aggregation: true
+occ_hard_st: true
+occ_g0_ckpt: auto

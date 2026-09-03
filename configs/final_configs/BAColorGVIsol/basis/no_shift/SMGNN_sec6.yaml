@@ -1,0 +1,19 @@
+includes:
+  - base.yaml
+model:
+  model_name: SMGNN
+  gnn_clf_layer: 2
+ood:
+  ood_alg: SMGNN
+  ood_param: 1
+  extra_param:
+    - false
+    - 10
+    - 0.001
+train:
+  mile_stones:
+    - 150
+  entr_coeff: 1.0 # Section 6: increased entropy regularization
+log_file: exp_0
+clean_save: true
+use_norm: bn # Section 6: batch normalization

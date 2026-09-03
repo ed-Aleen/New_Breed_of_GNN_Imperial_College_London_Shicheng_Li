@@ -94,7 +94,19 @@ class GSAT(GNNBasic):
         # Mask non-black pixels
         # att[att.view(-1) < 0.51, :] = 0.0
 
-        set_masks(edge_att, self, att)
+        # OCC Stage B (opt-in, PORTS.md): straight-through hard display during
+        # training -- the frozen mu0-calibrated classifier only ever sees
+        # {0,1} displays (its calibration distribution); gradients flow through
+        # the soft att. The returned tuple stays soft, so the KL regulariser
+        # and the eval-time score channel are untouched.
+        if self.training and bool(getattr(self.config, "occ_hard_st", False)):
+            assert not self.learn_edge_att, "occ_hard_st: node-att cells only"
+            att_disp = ((att > 0.5).float() - att).detach() + att
+            edge_att = lift_node_att_to_edge_att(att_disp, data.edge_index)
+        else:
+            att_disp = att
+
+        set_masks(edge_att, self, att_disp)
 
         if self.gnn_clf:
             logits = self.classifierS(self.gnn_clf(*args, **kwargs))
@@ -290,10 +302,20 @@ def set_masks(mask: Tensor, model: nn.Module, node_mask:Tensor=None):
     else:
         modules = model.gnn_clf.encoder.convs.modules()
 
+    # OPT-IN repair of the PyG-2.6 porting regression (PREREG_v1.md section 31, R21-c).
+    # As shipped, `_fixed_explain` is set ONLY under PyG 2.4.0, but ACRConv2.message gates
+    # BOTH of its branches on that flag -- so under the installed PyG 2.6.0 the mask never
+    # reaches the aggregation term:  max |delta message| == 0.000e+00  (measured 2026-08-25).
+    # That violates the theory's assumption (1), "multiplicative mask on the aggregation".
+    # DEFAULT IS OFF: every existing checkpoint was trained with the flag unset, and flipping
+    # it silently would make those results uninterpretable.  Enable per run with
+    #     fix_mask_aggregation: true     in the config YAML
+    # and give the run its own --save_tag so checkpoints never collide.
+    _fix = bool(getattr(getattr(model, "config", None), "fix_mask_aggregation", False))
     for module in modules:
     # for module in model.modules():
         if isinstance(module, MessagePassing):
-            if __pyg_version__ == "2.4.0":
+            if __pyg_version__ == "2.4.0" or _fix:
                 module._fixed_explain = True
             else:
                 module.__explain__ = True
@@ -318,9 +340,8 @@ def clear_masks(model: nn.Module):
     for module in modules:
     # for module in model.modules():
         if isinstance(module, MessagePassing):
-            if __pyg_version__ == "2.4.0":
-                module._fixed_explain = False
-            else:
+            module._fixed_explain = False      # opt-in repair (R21-c): always cleared
+            if __pyg_version__ != "2.4.0":
                 module.__explain__ = False
                 module._explain = False
             

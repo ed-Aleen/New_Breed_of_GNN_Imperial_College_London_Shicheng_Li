@@ -29,3 +29,16 @@ docs/build
 scripts/all_commands.sh
 outputs/GiSST_hyperparams_tuning.txt
 outputs/SMGNN_Twitter_hyperparams_tuning.txt
+
+# --- 2026-09-03: keep the open-source tree to code + configs ---
+rubbish/
+outputs/
+logs/
+logs_baselines/
+logs_occ/
+*.jsonl
+*.npz
+nohup_*.log
+*.bak
+*.bak-*
+__pycache__/

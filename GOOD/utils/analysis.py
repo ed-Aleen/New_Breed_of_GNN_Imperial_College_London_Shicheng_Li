@@ -35,9 +35,38 @@ def armonic(a,b):
 def gstd(a):
     return a.log().std().exp()
 
+def per_seed_values(metric_list, key):
+    """Values of `key` across seeds, NaN-padding the seeds that never produced
+    it (e.g. a seed whose model predicts a single class has no `1_predicted`).
+    Returns None when no seed has the key at all.
+
+    metric_list entries are defaultdict(list), so a missing key must be tested
+    with `in` -- indexing would silently insert an empty list and yield the
+    inhomogeneous array that np.nanmean cannot stack.
+    """
+    vals = [m[key] if (key in m and len(m[key])) else None for m in metric_list]
+    present = [v for v in vals if v is not None]
+    if not present:
+        return None
+    width = len(present[0])
+    return [v if v is not None else [float("nan")] * width for v in vals]
+
+
 def print_metric(name, data, results_aggregated=None, key=None):
-    avg = np.nanmean(data, axis=0)
-    std = np.nanstd(data, axis=0)
+    # rows may be ragged (a seed whose model collapsed can return a shorter or
+    # scalar entry, e.g. the *_acc_int lists); pad to the widest row with NaN
+    # so the average is taken over the seeds that actually produced a value.
+    rows = [r if isinstance(r, (list, tuple, np.ndarray)) else [r] for r in data]
+    width = max((len(r) for r in rows), default=0)
+    data = np.asarray(
+        [list(r) + [float("nan")] * (width - len(r)) for r in rows], dtype=float
+    )
+    with np.errstate(invalid="ignore"):
+        import warnings
+        with warnings.catch_warnings():          # all-NaN column -> NaN, not a crash
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            avg = np.nanmean(data, axis=0)
+            std = np.nanstd(data, axis=0)
     print(f"{name:<25}", " = ", ", ".join([f"{avg[i]:.3f} +- {std[i]:.3f}" for i in range(len(avg))]))
     if not results_aggregated is None:
         assign_dict(
@@ -847,22 +876,18 @@ def evaluate_metric(args):
         for metric in args.metrics.split("/"):
             for div in ["predicted"]:
                 for c in range(10):
-                    if f"{c}_{div}" not in metrics_score[split][metric][i].keys():
+                    # per-seed presence: a seed that never predicted class c has
+                    # no key at all, and must be NaN-padded rather than skipped
+                    # on the strength of the last seed alone (leaked `i`).
+                    s = per_seed_values(metrics_score[split][metric], f"{c}_{div}")
+                    if s is None:
                         continue
-                    # take values acorss seed, then print them
-                    s = [
-                        metrics_score[split][metric][i][f"{c}_{div}"] for i in range(len(metrics_score[split][metric]))
-                    ]
                     print_metric(metric + f" class {c}_{div}", s, results_aggregated, key=[config.dataset.dataset_name + " " + config.dataset.domain, config.complete_dirname, split, metric+f"_{div}"])    
-                s = [
-                    metrics_score[split][metric][i][f"all_{div}"] for i in range(len(metrics_score[split][metric]))
-                ]
+                s = per_seed_values(metrics_score[split][metric], f"all_{div}")
                 print_metric(metric + f" class all_{div}", s, results_aggregated, key=[config.dataset.dataset_name + " " + config.dataset.domain, config.complete_dirname, split, metric+f"_{div}"])
             print_metric(metric + "_acc_int", metrics_score[split][metric + "_acc_int"], results_aggregated, key=[config.dataset.dataset_name+" "+config.dataset.domain, config.complete_dirname, split, metric+"_acc_int"])
             
-            s = [
-                metrics_score[split][metric][i][f"rejection"] for i in range(len(metrics_score[split][metric]))
-            ]
+            s = per_seed_values(metrics_score[split][metric], "rejection")
             print_metric(metric + f" rejection", s, results_aggregated, key=[config.dataset.dataset_name + " " + config.dataset.domain, config.complete_dirname, split, metric+f"_rejection"])
             print()
 

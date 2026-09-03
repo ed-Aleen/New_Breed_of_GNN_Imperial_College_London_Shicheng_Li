@@ -1,0 +1,17 @@
+includes:
+  - base.yaml
+model:
+  model_name: DIR
+  gnn_clf_layer: 2
+ood:
+  ood_alg: DIR
+  ood_param: 0.01 # K=1% causal ratio (Section 6)
+  extra_param:
+    - false
+    - 10.0
+train:
+  mile_stones:
+    - 150
+log_file: exp_0
+clean_save: true
+use_norm: none

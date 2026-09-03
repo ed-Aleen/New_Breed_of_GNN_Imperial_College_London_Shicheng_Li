@@ -1,0 +1,17 @@
+includes:
+  - base.yaml
+model:
+  model_name: DIR
+ood:
+  ood_alg: DIR
+  ood_param: 0.01 # K=1% causal ratio (Section 6 / Table 4). NOTE: appendix D.3 text says K=10%; table label says K=1% -> using table value
+  extra_param:
+    - false
+    - 1e-4 # alpha param (invariant loss strength), same as D.1.1
+train:
+  mile_stones:
+    - 150
+log_file: exp_0
+clean_save: true
+use_norm: none
+use_readout_norm: none

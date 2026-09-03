@@ -438,6 +438,34 @@ class Pipeline:
         )
         return None
 
+    def _occ_load_freeze(self, path):
+        r"""OCC Stage B (PORTS.md): load g0 weights and freeze the classifier
+        side. Frozen modules are also pinned to eval() (BatchNorm running
+        stats stay fixed) -- re-applied every train_batch because evaluate()
+        restores global train() mode."""
+        if path == "auto":
+            path = os.path.join(self.config.ckpt_dir, "occ_g0.ckpt")
+        ckpt = torch.load(path, map_location=self.config.device)
+        prefixes = ckpt["meta"]["frozen_prefixes"]
+        missing, unexpected = self.model.load_state_dict(
+            ckpt["state_dict"], strict=False)
+        assert not unexpected, f"OCC g0 load: unexpected keys {unexpected[:5]}"
+        n_frozen = 0
+        for n, p in self.model.named_parameters():
+            if any(n.startswith(pref + ".") for pref in prefixes):
+                p.requires_grad_(False)
+                n_frozen += 1
+        mods = []
+        for pref in prefixes:
+            m = self.model
+            for part in pref.split("."):
+                m = getattr(m, part)
+            mods.append(m)
+        self._occ_frozen_modules = mods
+        print(f"#IM# OCC Stage B: loaded g0 from {path} "
+              f"(calib NLL {ckpt['meta'].get('best_nll'):.4f}); "
+              f"froze {n_frozen} tensors under {prefixes}")
+
     def train_batch(self, data: Batch, pbar, epoch:int) -> dict:
         r"""
         Train a batch. (Project use only)
@@ -448,6 +476,9 @@ class Pipeline:
         Returns:
             Calculated loss.
         """
+        if getattr(self, "_occ_frozen_modules", None):
+            for m in self._occ_frozen_modules:
+                m.eval()
         data = data.to(self.config.device)
 
         self.ood_algorithm.optimizer.zero_grad()
@@ -512,7 +543,9 @@ class Pipeline:
                f"{self.config.train.max_epoch}epoch_" \
                f"lr{self.config.train.lr}_" \
                f"wd{self.config.train.weight_decay}"
-        self.writer = SummaryWriter(f"/home/azzolin/sedignn/redundancy_undermines/outputs/logs/{run_name}")        
+        # PORT: upstream hardcodes /home/azzolin/... which does not exist on this
+        # machine (SummaryWriter would crash on makedirs). Log inside this repo.
+        self.writer = SummaryWriter(f"/vol/bitbucket/sl8025/gnn_deg_expl_clean/outputs/logs/{run_name}")
         self.timestamp = datetime.timestamp(datetime.now())
 
         if self.config.wandb:
@@ -521,6 +554,12 @@ class Pipeline:
         # config model
         print('Config model')
         self.config_model('train')
+
+        # OCC Stage B (opt-in, PORTS.md): load the mu0-calibrated classifier
+        # (occ_stage_a.py output) and freeze it BEFORE the optimizer is built,
+        # so set_up() only optimises the extractor side.
+        if getattr(self.config, "occ_g0_ckpt", None):
+            self._occ_load_freeze(self.config.occ_g0_ckpt)
 
         # Load training utils
         print('Load training utils')
@@ -606,6 +645,10 @@ class Pipeline:
             for stat, split in zip([epoch_train_stat, id_val_stat], ["train", "valid"]):
                 all_att = torch.cat(stat["node_expl"]).view(-1)
                 node_gt = torch.cat(stat["node_gt"])
+                # PORT: datasets without a per-node GT (MUTAG/SST2P fallback path)
+                # can yield mismatched lengths; skip the diagnostic instead of crashing.
+                if all_att.shape[0] != node_gt.shape[0]:
+                    continue
                 bkg_att_weights = all_att[node_gt == 0]
                 signal_att_weights = all_att[node_gt == 1]
                 bkg_att_weights = torch.cat((bkg_att_weights, torch.zeros((1))), dim=0)
@@ -616,10 +659,13 @@ class Pipeline:
                     p = p[p > 0]
                     return -np.sum(p * np.log(p)) / np.log(base)  # convert log to desired base
                 self.writer.add_scalar(f'{split}_loss/{self.timestamp}', loss_per_batch_dict['total_loss'], epoch)
-                self.writer.add_histogram(f'{split}_histogram/{self.timestamp}/bkg_att_weights',
-                                        bkg_att_weights, epoch, bins=100)
-                self.writer.add_histogram(f'{split}_histogram/{self.timestamp}/signal_att_weights',
-                                        signal_att_weights, epoch, bins=100)
+                # PORT: add_histogram crashes on NaN/Inf scores (e.g. early SMGNN); guard.
+                if torch.isfinite(bkg_att_weights).all():
+                    self.writer.add_histogram(f'{split}_histogram/{self.timestamp}/bkg_att_weights',
+                                            bkg_att_weights, epoch, bins=100)
+                if torch.isfinite(signal_att_weights).all():
+                    self.writer.add_histogram(f'{split}_histogram/{self.timestamp}/signal_att_weights',
+                                            signal_att_weights, epoch, bins=100)
                 entropy_att_distrib = histogram_entropy(all_att, n_bins=100, base=2)
                 self.writer.add_scalar(f'{split}_H_E/{self.timestamp}', entropy_att_distrib, epoch)
             ## 
@@ -751,8 +797,17 @@ class Pipeline:
                         if is_node_expl:
                             node_expl = node_scores[data.batch == j].squeeze(1)
 
-                            # normalize explanation scores in [0,1]
-                            # node_expl = (node_expl - node_expl.min()) / (node_expl.max() - node_expl.min())
+                            # PORT (paper D.5): "we apply an instance-wise min-max normalization
+                            # while sticking to the 0.5 threshold. In particular, this happened
+                            # for MNISTsp and MUTAG." General rule: apply whenever SMGNN scores
+                            # collapse such that max <= 0.5 (which would produce an empty
+                            # explanation). The paper names MNIST/MUTAG because those are where
+                            # collapse happened for their seeds; RBGV seeds can also collapse
+                            # under the stronger entr_coeff=1.0 in Section 6.
+                            if self.config.model.model_name == "SMGNN":
+                                _lo, _hi = node_expl.min(), node_expl.max()
+                                if _hi > _lo and _hi <= 0.5:
+                                    node_expl = (node_expl - _lo) / (_hi - _lo)
 
                             new_g.node_expl = node_expl
 
@@ -896,8 +951,9 @@ class Pipeline:
                 #     exit()
 
         if len(eval_samples) <= 1:
+            # PORT: upstream exit() killed the whole eval run on the first graph with
+            # too few intervened samples; record neutral scores and continue instead.
             print(f"\nToo few intervened samples, skipping this")
-            exit()
             scores["all_KL"].append(1.0)
             scores["all_L1"].append(1.0)
             scores["rejection"].append(np.nan)
@@ -1199,7 +1255,12 @@ class Pipeline:
 
             # --------------- TEMPORARY ONLY FOR THE IB ANALYSIS ------------------
             node_expl_all.append(model_output[2].cpu())
-            node_gt_all.append(data.node_is_spurious.cpu())
+            # PORT: datasets without a spurious-node ground truth (e.g. MUTAG, SST2P)
+            # have no node_is_spurious attribute; upstream crashed here during training.
+            if hasattr(data, 'node_is_spurious'):
+                node_gt_all.append(data.node_is_spurious.cpu())
+            else:
+                node_gt_all.append(torch.zeros(data.x.shape[0], dtype=torch.bool))
 
             mask_all.append(mask)
             # loss_all.append(loss.item())

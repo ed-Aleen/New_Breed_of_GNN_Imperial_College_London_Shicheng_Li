@@ -118,7 +118,11 @@ class BaseOODAlg(ABC):
         """
         loss = config.metric.loss_func(raw_pred, targets, reduction='none') * mask
         loss = loss * node_norm * mask.sum() if config.model.model_level == 'node' else loss
-        self.clf_loss = loss.detach().mean().item()
+        self.clf_loss = loss.detach().mean().item()   # UNWEIGHTED: keeps logs comparable
+        w = drive_norm_weights(loss, targets, mask, config)
+        if w is not None:
+            loss = loss * w
+            self.drive_norm_w_std = float(w.detach().std())
         return loss
     
     def loss_classifier(self, raw_pred: Tensor, targets: Tensor, mask: Tensor, node_norm: Tensor,
@@ -165,8 +169,10 @@ class BaseOODAlg(ABC):
 
         """
         self.model: torch.nn.Module = model
+        # PORTS.md (OCC): optimise trainable params only -- a no-op unless a
+        # mitigation froze part of the model (all params require grad upstream).
         self.optimizer = torch.optim.Adam(
-            self.model.parameters(),
+            [p for p in self.model.parameters() if p.requires_grad],
             lr=config.train.lr,
             weight_decay=config.train.weight_decay
         )
@@ -190,3 +196,58 @@ class BaseOODAlg(ABC):
         """
         loss.backward()
         self.optimizer.step()
+
+
+# ============================================================================== S3
+def drive_norm_weights(loss, targets, mask, config):
+    """Per-graph weights w (mean 1, detached) for the DATA TERM of the loss.
+
+    MOTIVATION.  With a single logit t and CE, dCE/dt = -eps_G q_G with q_G the graph's
+    error probability, so the drive reaching the extractor's logit ell_v is
+
+        dL / d ell_v  =  - eps_G q_G a_v sigma'(ell_v),      a_v = dt / d s_v .
+
+    The per-graph factor q_G means the class the classifier stays wrong about longer
+    contributes more gradient.  If that is what produces the seed-stable class asymmetry
+    in the alpha/beta decomposition, then cancelling q_G must make alpha class-symmetric.
+
+    q is recovered from the loss itself -- no logits needed, so this works for BCE and
+    softmax CE alike:   CE = -log p_correct   =>   q = 1 - exp(-CE).
+
+    Returns None for mode "none" (caller leaves the loss untouched, bit-identical).
+    """
+    mode = str(getattr(config, "drive_norm", "none") or "none").lower()
+    if mode == "none" or config.model.model_level == 'node':
+        return None
+    with torch.no_grad():
+        B = loss.shape[0]
+        ce = loss.detach().reshape(B, -1).sum(dim=1)
+        if mask is not None:
+            valid = mask.detach().reshape(B, -1).any(dim=1)
+        else:
+            valid = torch.ones(B, dtype=torch.bool, device=loss.device)
+        qfloor = float(getattr(config, "drive_norm_qfloor", 1e-3))
+        q = (1.0 - torch.exp(-ce)).clamp(min=qfloor, max=1.0)
+
+        w = torch.ones_like(ce)
+        if mode in ("invq", "invq_classbal", "shuffle"):
+            w = 1.0 / q
+        if mode in ("classbal", "invq_classbal"):
+            cls = targets.detach().reshape(B, -1)[:, 0].long()
+            uc = cls[valid].unique()
+            if uc.numel() > 0:
+                share = valid.sum().float() / uc.numel()
+                for c in uc:
+                    k = (cls == c) & valid
+                    tot = w[k].sum()
+                    if float(tot) > 0:
+                        w = torch.where(k, w / tot * share, w)
+        if mode == "shuffle":
+            # PLACEBO: identical weight multiset, destroyed correspondence to q.
+            idx = torch.randperm(B, device=w.device)
+            w = w[idx]
+        w = torch.where(valid, w, torch.zeros_like(w))
+        m = w[valid].mean() if bool(valid.any()) else torch.ones((), device=w.device)
+        w = w / (m + 1e-12)
+    return w.reshape(B, *([1] * (loss.dim() - 1)))
+

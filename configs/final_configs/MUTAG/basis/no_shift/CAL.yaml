@@ -1,0 +1,15 @@
+includes:
+  - base.yaml
+model:
+  model_name: CAL
+ood:
+  ood_alg: CAL
+  ood_param: 0            # unused by CAL (kept for ckpt-dirname uniqueness)
+  extra_param:
+    - false               # learn_edge_att (node attention, as all models here)
+    - 0.5                 # lambda_unif  (paper searches (0.1,1.0); midpoint)
+    - 0.5                 # lambda_caus
+log_file: exp_0
+clean_save: true
+use_readout_norm: none
+mitigation_sampling: default

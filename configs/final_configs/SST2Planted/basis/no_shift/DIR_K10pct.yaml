@@ -1,0 +1,17 @@
+includes:
+  - base.yaml
+model:
+  model_name: DIR
+  dim_hidden: 128 # From DIR paper
+  dim_ffn: 128
+ood:
+  ood_alg: DIR
+  ood_param: 0.1 # K=10% causal ratio (Section 6 / Table 4)
+  extra_param:
+    - false
+    - 10.0 # alpha param (invariant loss strength), same as D.1.1
+train:
+  lr: 0.0002
+  train_bs: 128
+log_file: exp_0
+clean_save: true

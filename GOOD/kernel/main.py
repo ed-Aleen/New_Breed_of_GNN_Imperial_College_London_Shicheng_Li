@@ -157,12 +157,12 @@ def main():
     for s in test_scores.keys():
         print(f"{s.upper():<10} = {np.mean(test_scores[s]):.3f} +- {np.std(test_scores[s]):.3f}")
 
-    if not np.isnan(test_auroc["train"][0]):
+    if test_auroc.get("train") and not np.isnan(test_auroc["train"][0]):
         print("\n\nFinal AUCROC: ")
         for s in test_auroc.keys():
             print(f"{s.upper():<10} = {np.mean(test_auroc[s]):.3f} +- {np.std(test_auroc[s]):.3f}")
 
-    if not np.isnan(test_f1_pos["train"][0]):
+    if test_f1_pos.get("train") and not np.isnan(test_f1_pos["train"][0]):
         print("\n\nFinal F1_pos: ")
         for s in test_f1_pos.keys():
             print(f"{s.upper():<10} = {np.mean(test_f1_pos[s]):.3f} +- {np.std(test_f1_pos[s]):.3f}")
