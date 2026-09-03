@@ -36,9 +36,10 @@
 #   job=all (default): run everything sequentially
 # =============================================================================
 set -u
-cd /vol/bitbucket/sl8025/gnn_deg_expl_clean
-source /vol/bitbucket/sl8025/gsat_venv/bin/activate
-export PATH="/vol/bitbucket/sl8025/gnn_deg_expl_clean:$PATH"  # bare goodtg -> clean-repo wrapper
+cd "$(dirname "$(readlink -f "$0")")"          # repo root, wherever it is cloned
+# activate a virtualenv if VENV points at one, otherwise use the current interpreter
+[ -n "${VENV:-}" ] && [ -f "$VENV/bin/activate" ] && source "$VENV/bin/activate"
+export PATH="$PWD:$PATH"  # bare goodtg -> clean-repo wrapper
 
 GPU="${1:-0}"
 JOB="${2:-all}"

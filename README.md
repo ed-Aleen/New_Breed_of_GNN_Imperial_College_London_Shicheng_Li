@@ -30,9 +30,10 @@ decodes to the label marginal, so displaying it buys no accuracy. Accuracy becom
 with evidence, and the ceiling is a contingency-table quantity computable *before any training*. The
 residual smuggling channel is confined to counting statistics.
 
-On the released checkpoints, at matched display size and with accuracy preserved (0.998 → 0.998),
-the label-irrelevant register enters the baseline explanation in half of the graphs and enters the
-calibrated model's explanation in none of them; ground-truth precision rises from 0.835 to 1.000.
+On the released checkpoints, with accuracy preserved (0.998 → 0.998), the calibrated extractor
+selects ground-truth evidence more accurately than the jointly trained baseline on **82% of the
+graphs**, and the universally present, label-irrelevant register that enters the baseline
+explanation in half of the graphs enters the calibrated explanation in none of them.
 
 The diagnostics run on **frozen checkpoints with zero training and zero backpropagation**: a
 five-tuple certificate for the degeneration index, a pre-registered accuracy ceiling, a display

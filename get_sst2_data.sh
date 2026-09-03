@@ -4,9 +4,10 @@
 # dig/xgraph/dataset/nlp_dataset.py and place files as storage/datasets/GraphSST2/raw/GraphSST2_*.pkl
 # Usage:  bash get_sst2_data.sh
 set -e
-cd /vol/bitbucket/sl8025/gnn_deg_expl_clean
-source /vol/bitbucket/sl8025/gsat_venv/bin/activate 2>/dev/null
-export PATH="/vol/bitbucket/sl8025/gnn_deg_expl_clean:$PATH"  # bare goodtg -> clean-repo wrapper
+cd "$(dirname "$(readlink -f "$0")")"          # repo root, wherever it is cloned
+# activate a virtualenv if VENV points at one, otherwise use the current interpreter
+[ -n "${VENV:-}" ] && [ -f "$VENV/bin/activate" ] && source "$VENV/bin/activate"
+export PATH="$PWD:$PATH"  # bare goodtg -> clean-repo wrapper
 
 RAW=storage/datasets/GraphSST2/raw
 mkdir -p "$RAW"

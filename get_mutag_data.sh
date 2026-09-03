@@ -4,7 +4,7 @@
 # Source: https://github.com/flyingdoog/PGExplainer/tree/master/dataset
 # Usage:  bash get_mutag_data.sh
 set -e
-cd /vol/bitbucket/sl8025/gnn_deg_expl_clean
+cd "$(dirname "$(readlink -f "$0")")"          # repo root, wherever it is cloned
 RAW=storage/datasets/Mutagenicity/raw
 mkdir -p "$RAW"
 cd "$RAW"

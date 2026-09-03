@@ -2,9 +2,10 @@
 # Single-job launcher so each model can run on its own machine (--gpu_idx 0).
 # Usage:  bash train.sh <job>
 #   jobs: mutag_gsat  mutag_smgnn  sst2p_gsat  sst2p_dir  sst2p_smgnn
-cd /vol/bitbucket/sl8025/gnn_deg_expl_clean
-source /vol/bitbucket/sl8025/gsat_venv/bin/activate 2>/dev/null
-export PATH="/vol/bitbucket/sl8025/gnn_deg_expl_clean:$PATH"  # bare goodtg -> clean-repo wrapper
+cd "$(dirname "$(readlink -f "$0")")"          # repo root, wherever it is cloned
+# activate a virtualenv if VENV points at one, otherwise use the current interpreter
+[ -n "${VENV:-}" ] && [ -f "$VENV/bin/activate" ] && source "$VENV/bin/activate"
+export PATH="$PWD:$PATH"  # bare goodtg -> clean-repo wrapper
 
 M=final_configs/MUTAG/basis/no_shift
 S=final_configs/SST2Planted/basis/no_shift

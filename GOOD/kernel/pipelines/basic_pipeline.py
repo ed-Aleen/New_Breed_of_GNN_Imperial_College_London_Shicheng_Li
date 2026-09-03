@@ -545,7 +545,7 @@ class Pipeline:
                f"wd{self.config.train.weight_decay}"
         # PORT: upstream hardcodes /home/azzolin/... which does not exist on this
         # machine (SummaryWriter would crash on makedirs). Log inside this repo.
-        self.writer = SummaryWriter(f"/vol/bitbucket/sl8025/gnn_deg_expl_clean/outputs/logs/{run_name}")
+        self.writer = SummaryWriter(f"outputs/logs/{run_name}")
         self.timestamp = datetime.timestamp(datetime.now())
 
         if self.config.wandb:

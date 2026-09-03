@@ -21,7 +21,7 @@ def stats(label, ckpt_path):
 # MNIST GSAT seeds 1-5
 for seed in range(1, 6):
     path = glob.glob(
-        f"/vol/bitbucket/sl8025/gnn_deg_expl_clean/storage/checkpoints/round{seed}/"
+        f"storage/checkpoints/round{seed}/"
         "MNIST_basis_no_shift/GSAT*/0.001lr_0.0wd/GSAT_0.1_False_10_0.7/id_best.ckpt"
     )
     if path:
@@ -31,7 +31,7 @@ print("\n" + "="*60)
 print("MUTAG GSAT seeds 1-5")
 for seed in range(1, 6):
     path = glob.glob(
-        f"/vol/bitbucket/sl8025/gnn_deg_expl_clean/storage/checkpoints/round{seed}/"
+        f"storage/checkpoints/round{seed}/"
         "MUTAG_basis_no_shift/GSAT*/0.001lr_0.0wd/GSAT_1_False_10_0.7/id_best.ckpt"
     )
     if path:

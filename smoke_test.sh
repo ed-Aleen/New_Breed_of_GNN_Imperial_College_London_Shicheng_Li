@@ -4,9 +4,10 @@
 # Verifies: config loads, dataset loads, model builds (ACR2 + norms), training
 # steps run, checkpoint saves. Run BEFORE the overnight jobs.
 # Usage:  bash smoke_test.sh
-cd /vol/bitbucket/sl8025/gnn_deg_expl_clean
-source /vol/bitbucket/sl8025/gsat_venv/bin/activate 2>/dev/null
-export PATH="/vol/bitbucket/sl8025/gnn_deg_expl_clean:$PATH"  # bare goodtg -> clean-repo wrapper
+cd "$(dirname "$(readlink -f "$0")")"          # repo root, wherever it is cloned
+# activate a virtualenv if VENV points at one, otherwise use the current interpreter
+[ -n "${VENV:-}" ] && [ -f "$VENV/bin/activate" ] && source "$VENV/bin/activate"
+export PATH="$PWD:$PATH"  # bare goodtg -> clean-repo wrapper
 
 M=final_configs/MUTAG/basis/no_shift
 S=final_configs/SST2Planted/basis/no_shift

@@ -3,8 +3,8 @@
 # expected location, then this repo's process() will build its own .pt files.
 # Usage:  bash get_mnist_data.sh
 set -e
-cd /vol/bitbucket/sl8025/gnn_deg_expl_clean
-SRC=/vol/bitbucket/sl8025/GSAT/data/mnist/raw
+cd "$(dirname "$(readlink -f "$0")")"          # repo root, wherever it is cloned
+SRC=${MNIST_RAW:?set MNIST_RAW to the directory holding the raw MNIST superpixel files}
 DST=storage/datasets/MNIST/raw
 mkdir -p "$DST"
 

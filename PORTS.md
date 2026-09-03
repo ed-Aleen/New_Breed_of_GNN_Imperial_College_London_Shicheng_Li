@@ -1,11 +1,11 @@
 # PORTS.md — every deviation from upstream `steveazzolin/gnn_deg_expl` @ b7b14be
 
 This repo is a clean clone of the official paper repo, at the SAME commit as the
-research repo `/vol/bitbucket/sl8025/gnn_deg_expl` (upstream HEAD = local HEAD = `b7b14be`).
+the research working copy (upstream HEAD = local HEAD = `b7b14be`).
 Only the minimal bug-fix tier of the research repo's uncommitted changes was ported.
 Nothing here is committed to git — `git diff` against HEAD shows exactly this list.
 
-Environment assumed: `/vol/bitbucket/sl8025/gsat_venv` (torch 2.5.1+cu121, **numpy 2.2.6, PyG 2.6.0**).
+Environment assumed: a virtualenv with (torch 2.5.1+cu121, **numpy 2.2.6, PyG 2.6.0**).
 
 ## Ported (tier: required — upstream crashes or is invalid in this environment)
 

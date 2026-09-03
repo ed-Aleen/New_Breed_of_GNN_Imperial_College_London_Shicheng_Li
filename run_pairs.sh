@@ -5,7 +5,7 @@
 set -u
 cd "$(dirname "$0")"
 GPU=${1:?gpu_idx}; SEED=${2:-1}; N=${3:-8}; RANK=${4:-first}
-OUT=/vol/bitbucket/sl8025/gnn_deg_expl/Thesis/figures/pairs
+OUT=${OUT:-figures/pairs}
 [ "$RANK" != first ] && OUT="${OUT}_$RANK"
 mkdir -p "$OUT"
 run() {  # run <dataset_dir> <model_yaml> <thr> <extra...>
