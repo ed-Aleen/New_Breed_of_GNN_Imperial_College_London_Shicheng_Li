@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# goodtg wrapper for the CLEAN repo.
-# The gsat_venv has the OLD repo pip-installed in editable mode, so the bare
-# `goodtg` console script always imports the OLD repo's code. This wrapper
-# forces imports from THIS repo instead (sys.path[0]=cwd + PYTHONPATH both
-# precede site-packages), without touching the venv.
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$REPO" && PYTHONPATH="$REPO" exec python -m GOOD.kernel.main "$@"

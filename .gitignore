@@ -44,12 +44,13 @@ nohup_*.log
 __pycache__/
 
 # --- development scaffolding: kept locally, not part of the research release ---
-goodtg                 # local wrapper forcing imports from this checkout
-HEALTH_REPORT.md       # per-seed checkpoint notes
-overnight.sh           # multi-machine campaign orchestration
-evals.sh               # multi-machine evaluation orchestration
-smoke_test.sh          # local smoke test
-train.sh               # local per-job launcher
-run_table4_eval.sh     # launcher for the upstream paper's table
-diag_scores.py         # ad-hoc checkpoint weight dump
-certificate_e3a.py     # superseded by occ_certificate.py
+# gitignore has no inline comments: one bare pattern per line
+goodtg
+HEALTH_REPORT.md
+overnight.sh
+evals.sh
+smoke_test.sh
+train.sh
+run_table4_eval.sh
+diag_scores.py
+certificate_e3a.py
