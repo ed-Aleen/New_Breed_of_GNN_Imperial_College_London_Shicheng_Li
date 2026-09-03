@@ -31,6 +31,9 @@ Notes:
               near-unique warning there — exact-tie analysis is only
               meaningful on discrete-attribute datasets, see design E1-2).
 """
+
+import os as _os, sys as _sys                                  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import os
 import sys

@@ -56,16 +56,16 @@ membudget() {
 
 case $JOB in
   prereg)
-    python occ_ceiling.py --config_path "$(cfg mutag_gsat occ)" --seeds 1 --task test --backbone ACR2 --gpu_idx "$GPU"
-    python occ_ceiling.py --config_path "$(cfg rbgv_gsat occ)" --seeds 1 --task test --backbone ACR2 --gpu_idx "$GPU"
+    python occ/occ_ceiling.py --config_path "$(cfg mutag_gsat occ)" --seeds 1 --task test --backbone ACR2 --gpu_idx "$GPU"
+    python occ/occ_ceiling.py --config_path "$(cfg rbgv_gsat occ)" --seeds 1 --task test --backbone ACR2 --gpu_idx "$GPU"
     ;;
   check)
     for c in mutag_gsat mutag_smgnn rbgv_gsat rbgv_smgnn mnist_gsat mnist_smgnn sst2p_gsat sst2p_smgnn; do
-      python occ_channel_check.py --config_path "$(cfg "$c" occ)" --seeds 1 --task test --backbone ACR2 --gpu_idx "$GPU"
+      python occ/occ_channel_check.py --config_path "$(cfg "$c" occ)" --seeds 1 --task test --backbone ACR2 --gpu_idx "$GPU"
     done
     ;;
   smokeA)
-    python occ_stage_a.py --config_path "$(cfg mutag_gsat occ)" --seeds 1 --task train \
+    python occ/occ_stage_a.py --config_path "$(cfg mutag_gsat occ)" --seeds 1 --task train \
       --backbone ACR2 --gpu_idx "$GPU" --save_tag occsmoke --occ_epochs 3
     ;;
   base_mnist_gsat)  ${GOODTG:-goodtg} --config_path "$(cfg mnist_gsat)"  --seeds 4/5    --task train --backbone ACR2 --gpu_idx "$GPU" ;;
@@ -75,7 +75,7 @@ case $JOB in
   base_sst2p_smgnn) ${GOODTG:-goodtg} --config_path "$(cfg sst2p_smgnn)" --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
   occA_*)
     C=${JOB#occA_}
-    python occ_stage_a.py --config_path "$(cfg "$C" occ)" --seeds $SEEDS --task train \
+    python occ/occ_stage_a.py --config_path "$(cfg "$C" occ)" --seeds $SEEDS --task train \
       --backbone ACR2 --gpu_idx "$GPU" --save_tag occ
     ;;
   occB_*)
@@ -86,7 +86,7 @@ case $JOB in
   certb_*|certo_*)
     C=${JOB#cert?_}
     if [ "${JOB%%_*}" = certo ]; then CFG=$(cfg "$C" occ); TAG="--save_tag occ"; else CFG=$(cfg "$C"); TAG=""; fi
-    python occ_certificate.py --config_path "$CFG" --seeds $SEEDS --task test \
+    python occ/occ_certificate.py --config_path "$CFG" --seeds $SEEDS --task test \
       --splits id_val --ratios "$(ratio "$C")" --backbone ACR2 --gpu_idx "$GPU" $TAG
     ;;
   evalb_*|evalo_*)

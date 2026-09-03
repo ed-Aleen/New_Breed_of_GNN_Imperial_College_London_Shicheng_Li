@@ -79,30 +79,34 @@ bash run_pairs.sh 0 1 8               # all eight cells, seed 1, eight graphs ea
 
 | Script | Measures |
 |---|---|
-| `occ_certificate.py` | degeneration index, display geometry, confidence band, codebook |
-| `occ_ceiling.py` | pre-registered evidence-availability ceiling with a permutation null |
-| `occ_channel_check.py` | masked forward pass against true subgraph re-encoding |
-| `freeze_probe.py` | input-gradient support of the display, layer by layer |
-| `barrier_scan.py` | switching barrier between realised and alternative colour classes |
-| `wl_colors.py`, `shape_check.py` | colour refinement and reachable display family |
+| `occ/occ_certificate.py` | degeneration index, display geometry, confidence band, codebook |
+| `occ/occ_ceiling.py` | pre-registered evidence-availability ceiling with a permutation null |
+| `occ/occ_channel_check.py` | masked forward pass against true subgraph re-encoding |
+| `probes/freeze_probe.py` | input-gradient support of the display, layer by layer |
+| `probes/barrier_scan.py` | switching barrier between realised and alternative colour classes |
+| `probes/wl_colors.py`, `probes/shape_check.py` | colour refinement and reachable display family |
 
 ## Layout
 
 | Path | Contents |
 |---|---|
+| `occ/` | calibration stage and the zero-training diagnostics |
+| `probes/` | mechanism probes on frozen checkpoints |
+| `figures/` | paired explanation panels and the mechanism figures |
+| `data/` | dataset acquisition |
+| `configs/final_configs/` | one directory per dataset; `*_OCC.yaml` selects the calibrated pipeline |
 | `GOOD/networks/models/` | GSAT, SMGNN, DIR, GIN backbones |
 | `GOOD/ood_algorithms/algorithms/` | per-model training objectives |
 | `GOOD/kernel/pipelines/` | training loop, display generation, faithfulness metrics |
 | `GOOD/utils/occ.py` | colour refinement, class-level mask sampling, subgraph re-encoding |
-| `configs/final_configs/` | one directory per dataset; `*_OCC.yaml` selects the calibrated pipeline |
-| `figures/` | scripts that draw the mechanism figures |
 | `PORTS.md` | every deviation from the upstream code, with its reason |
 
 ## Datasets
 
 Implementations are in `GOOD/data/good_datasets`. MUTAG and SST2P are fetched by
-`get_mutag_data.sh` and `get_sst2_data.sh`; MNIST75sp superpixels are extracted by
-`scripts/extract_mnist_superpixels.py`; RBGV is generated on first use.
+`data/get_mutag_data.sh` and `data/get_sst2_data.sh`; MNIST75sp superpixels are extracted by
+`scripts/extract_mnist_superpixels.py` and placed with `data/get_mnist_data.sh`; RBGV is generated
+on first use.
 
 ## Built on
 

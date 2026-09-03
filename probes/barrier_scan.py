@@ -26,6 +26,9 @@ Extras (stripped before the repo parser): --tpoints 11 --max_graphs 400
   --retrain_steps 200 --retrain_lr 1e-3 --retrain_attr -1 (auto = max wall)
   --out storage/barrier
 """
+
+import os as _os, sys as _sys                                  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import copy
 import os
 import sys
@@ -59,7 +62,7 @@ from GOOD.kernel.pipeline_manager import load_pipeline     # noqa: E402
 from GOOD.utils.logger import load_logger               # noqa: E402
 from torch_geometric.data import Batch                  # noqa: E402
 
-from masked_forward import masked_logits, nll_from_logits  # noqa: E402
+from GOOD.utils.masked_forward import masked_logits, nll_from_logits  # noqa: E402
 
 
 def build_att(items, t, beta, dev):

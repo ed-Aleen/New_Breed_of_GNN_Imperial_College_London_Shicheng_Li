@@ -43,6 +43,9 @@ R0 = float(pop_flag(sys.argv, "--occ_r0", "0.5"))
 DRAWS = int(pop_flag(sys.argv, "--train_draws", "4"))
 PREREG = pop_flag(sys.argv, "--prereg", "storage/occ_prereg")
 
+import os as _os, sys as _sys                                  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+
 from GOOD import config_summoner                            # noqa: E402
 from GOOD.utils.args import args_parser                     # noqa: E402
 from GOOD.utils.loader import initialize_model_dataset      # noqa: E402

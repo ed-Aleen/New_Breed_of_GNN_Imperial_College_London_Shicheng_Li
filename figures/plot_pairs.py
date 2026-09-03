@@ -20,6 +20,9 @@ Usage (flags mirror run_occ.sh; extras are stripped before the repo parser):
       --seeds 1 --task test --ratios 0.5 --backbone ACR2 --gpu_idx 0 --n 8
 Extras: --occ_config <yaml> --n 8 --out Thesis/figures/pairs --occ_tag occ
 """
+
+import os as _os, sys as _sys                                  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import os
 import sys
 

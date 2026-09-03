@@ -68,6 +68,9 @@ MAX_U_GRAPHS = int(pop_flag(sys.argv, "--max_u_graphs", "300"))
 OUT = pop_flag(sys.argv, "--out", "storage/certificates")
 DFS_CAP = 200000  # node-expansion cap for size-3/4 containment search
 
+import os as _os, sys as _sys                                  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+
 from GOOD import config_summoner                        # noqa: E402
 from GOOD.utils.args import args_parser                 # noqa: E402
 from GOOD.utils.loader import initialize_model_dataset  # noqa: E402

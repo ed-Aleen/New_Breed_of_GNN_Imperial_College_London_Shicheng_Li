@@ -26,6 +26,9 @@ Extra flags (stripped before the repo parser sees them):
   --decimals N   feature rounding for colour refinement (continuous cells)
   --out DIR      output dir (default storage/expl_shapes)
 """
+
+import os as _os, sys as _sys                                  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import os
 import sys
 from collections import Counter, defaultdict

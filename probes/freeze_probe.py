@@ -30,6 +30,9 @@ gradient of a zero-gated node is EXACTLY zero iff no positive-gated node lies
 within L hops (L = #conv layers). The halo check below verifies this
 prediction node-by-node.
 """
+
+import os as _os, sys as _sys                                  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import os
 import sys
 from datetime import datetime
@@ -84,7 +87,7 @@ from GOOD.kernel.pipeline_manager import load_pipeline     # noqa: E402
 from GOOD.utils.logger import load_logger               # noqa: E402
 from torch_geometric.data import Batch                  # noqa: E402
 
-from masked_forward import masked_logits, nll_from_logits, sanity_check  # noqa: E402
+from GOOD.utils.masked_forward import masked_logits, nll_from_logits, sanity_check  # noqa: E402
 
 
 def main():

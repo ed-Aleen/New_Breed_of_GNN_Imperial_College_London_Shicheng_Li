@@ -42,6 +42,9 @@ EPOCHS = int(pop_flag(sys.argv, "--occ_epochs", "-1"))
 GRAN = pop_flag(sys.argv, "--occ_granularity", "auto")
 ROUNDS = int(pop_flag(sys.argv, "--occ_rounds", "-1"))
 
+import os as _os, sys as _sys                                  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+
 from GOOD import config_summoner                            # noqa: E402
 from GOOD.utils.args import args_parser                     # noqa: E402
 from GOOD.utils.loader import initialize_model_dataset      # noqa: E402
@@ -49,7 +52,7 @@ from GOOD.ood_algorithms.ood_manager import load_ood_alg    # noqa: E402
 from GOOD.utils.logger import load_logger                   # noqa: E402
 from GOOD.utils.occ import (node_class_keys, detect_granularity,  # noqa: E402
                             sample_class_mask)
-from masked_forward import masked_logits, nll_from_logits   # noqa: E402
+from GOOD.utils.masked_forward import masked_logits, nll_from_logits   # noqa: E402
 
 
 def classifier_prefixes(model):
