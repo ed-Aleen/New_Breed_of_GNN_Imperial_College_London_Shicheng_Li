@@ -20,4 +20,4 @@ goodtg --config_path final_configs/SST2Planted/basis/no_shift/DIR.yaml --seeds "
 goodtg --config_path final_configs/SST2Planted/basis/no_shift/SMGNN.yaml --seeds "1/2/3/4/5" --task test --gpu_idx 1 --pretrain degenerate
 
 
-echo "DONE all :)"
+echo "DONE all: :)"
