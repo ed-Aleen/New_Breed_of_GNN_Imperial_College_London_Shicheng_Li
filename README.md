@@ -40,16 +40,24 @@ profile is not an argument of any term, so two strategies, one displaying a clas
 universal token, can score *identically*. Nothing pays for faithfulness, and the mechanisms below
 meet no opposition.
 
-**2. The extractor is confined to a menu fixed before training.** A message-passing scorer gives
-equal scores to nodes of equal Weisfeiler-Leman colour, so any display is a union of colour classes.
-That menu is finite, enumerable by one pass of colour refinement, and independent of the weights.
-The converse is just as tight: any score field constant on colour classes is realisable, including
-one that reverses any preference order you care to name. **Confinement fixes the menu; it does not
-say which item to pick.** The choice is left to training, which is the first source of seed variance.
+**2. The extractor inherits the backbone's blind spots and cannot escape them.** A message-passing
+backbone carries structural preferences — walk reachability, low-pass filtering, motif and
+Weisfeiler-Leman resolution, commute time. These transport to the selection layer through a one-way
+valve. What the backbone *can* see is inherited only at stationary points; what it *cannot* see is
+inherited unconditionally and identically, because a scorer reading node states cannot separate nodes
+whose states are equal. Colour classes are that blind half, and every display is a union of them.
 
-**3. Once picked, the choice sticks.** The classifier specialises on the current display while the
-backbone receives exactly zero gradient on the unselected classes, so switching means feeding the
-classifier content it has never seen. The resulting barrier is concrete: its existence is decided by
+The menu is therefore finite, enumerable by one pass of colour refinement, and fixed before training
+begins. What does **not** follow is that the extractor prefers the nodes the backbone prefers: any
+score field constant on colour classes is realisable, including one reversing any preference order
+you care to name. **Preference fixes the menu; training picks the dish.** That freedom is not a gap
+in the argument but a precondition of the phenomenon — a fixed, label-independent ordering could
+never express a register that switches with the predicted class — and it is the first source of
+seed-to-seed variance.
+
+**3. Once picked, the choice sticks.** Extractor and classifier interlock: the classifier
+specialises on the current display while the backbone receives exactly zero gradient on the
+unselected classes, so switching means feeding the classifier content it has never seen. The resulting barrier is concrete: its existence is decided by
 the sign of a quantity measurable on any checkpoint with two forward passes, and its height is capped
 by the sparsity toll rather than by the fit term.
 
@@ -63,7 +71,8 @@ silences.
 
 ## How to stop it
 
-Step 1 rules out the objective as a lever and step 2 rules out the menu. What remains is the
+Step 1 rules out the objective as a lever and step 2 rules out the menu, which is inherited from the
+backbone and not negotiable. What remains is the
 classifier's freedom: trained jointly it can learn any codebook, which is what makes a meaningless
 display decodable. **The remedy is to confiscate it.** The classifier is calibrated on random
 displays drawn independently of the extractor, at colour-class granularity, then frozen; the
