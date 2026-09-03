@@ -7,39 +7,68 @@ MSc Individual Project, Department of Computing, Imperial College London.
 
 ---
 
-A self-explainable GNN selects a subgraph and predicts from it alone, so that subgraph is supposed
-to be the evidence. It need not be. A subgraph occurring in *every* input carries the predicted label
+A self-explainable GNN selects a subgraph and predicts from it alone, so that subgraph is supposed to
+be the evidence. It need not be. A subgraph occurring in *every* input carries the predicted label
 just as well as one carrying evidence, so the explanation can become a register rather than a reason
 while accuracy stays perfect. Prior work establishes that this happens and detects it. This project
-explains **why** it happens and supplies a **remedy**.
+defines what it is, explains **why** it happens, and supplies a **remedy**.
 
-## Why explanations degenerate
+## What degeneration is
 
-**The objective never pays for faithfulness.** Every published training objective is a functional of
-the prediction behaviour and the score field. Whether the displayed content occurs in the input is
-not an argument of any term, so the most faithful and the strictly degenerate strategy can score
-identically.
+The classifier reads the selected subgraph and nothing else, so the display determines the prediction
+by construction — for a faithful model and a degenerate one alike. That is why *the explanation
+predicts the label* has no discriminating power, and why necessity tests rank a register highest of
+all: deleting the model's only input does change the prediction.
 
-**The extractor picks from a menu fixed before training.** A message-passing scorer assigns equal
-scores to nodes of equal Weisfeiler-Leman colour, so any display is a union of colour classes. That
-menu is enumerable by one pass of colour refinement, independently of the weights, and the
-architecture does not say which item to pick.
+The discriminating question concerns the other channel. Write `O` for the occurrence profile: for
+each content the extractor displays, whether that content actually occurs in the input. Degeneration
+is
 
-**Once picked, the choice sticks.** The classifier specialises on the current display while the
-backbone receives exactly zero gradient on the unselected classes, and the stationary point is held
-by a barrier whose existence is decided by a sign measurable at any checkpoint.
+```
+rho  =  H(y_hat | O) / H(y_hat)  ∈ [0, 1]
+```
 
-When the displayed types are near-universal — a contingency-table condition checkable before
-training — the explanation carries only the code of the selection act. A five-tuple certificate
-decides this on any checkpoint with **zero training and zero backpropagation**.
+the fraction of the prediction that survives knowing the occurrence profile. `rho = 1` is strict
+degeneration: every bit the explanation carries comes from the act of selecting, none from the
+evidence being there. It is a property of the trained model and the distribution, not of an instance.
+
+## Why it happens
+
+**1. The objective is blind.** Every published training objective — classification loss plus a score
+or size regulariser — is a functional of the prediction behaviour and the score field. The occurrence
+profile is not an argument of any term, so two strategies, one displaying a class marker and one a
+universal token, can score *identically*. Nothing pays for faithfulness, and the mechanisms below
+meet no opposition.
+
+**2. The extractor is confined to a menu fixed before training.** A message-passing scorer gives
+equal scores to nodes of equal Weisfeiler-Leman colour, so any display is a union of colour classes.
+That menu is finite, enumerable by one pass of colour refinement, and independent of the weights.
+The converse is just as tight: any score field constant on colour classes is realisable, including
+one that reverses any preference order you care to name. **Confinement fixes the menu; it does not
+say which item to pick.** The choice is left to training, which is the first source of seed variance.
+
+**3. Once picked, the choice sticks.** The classifier specialises on the current display while the
+backbone receives exactly zero gradient on the unselected classes, so switching means feeding the
+classifier content it has never seen. The resulting barrier is concrete: its existence is decided by
+the sign of a quantity measurable on any checkpoint with two forward passes, and its height is capped
+by the sparsity toll rather than by the fit term.
+
+**4. The verdict, and where it does not apply.** When the displayed types are near-universal — a
+contingency-table condition computable *before training* — the occurrence profile is constant, so
+`rho = 1` while accuracy is untouched. A five-tuple certificate settles this on any checkpoint with
+**zero training and zero backpropagation**. That condition is a genuine premise: a watermark
+counterexample shows no architecture-and-objective-only argument can exist, and the cells where it
+fails are exactly those the literature reports as non-degenerate. The chain predicts its own
+silences.
 
 ## How to stop it
 
-The freedom being exploited is the classifier's: trained jointly, it can learn any codebook. **The
-remedy is to confiscate it.** The classifier is calibrated on random displays drawn independently of
-the extractor, at colour-class granularity, then frozen; the extractor is trained afterwards against
-that fixed decoder. The granularity is forced by the confinement result above, making the calibration
-support coincide with the displays the extractor can reach.
+Step 1 rules out the objective as a lever and step 2 rules out the menu. What remains is the
+classifier's freedom: trained jointly it can learn any codebook, which is what makes a meaningless
+display decodable. **The remedy is to confiscate it.** The classifier is calibrated on random
+displays drawn independently of the extractor, at colour-class granularity, then frozen; the
+extractor is trained afterwards against that fixed decoder. Step 2 forces the granularity, making
+the calibration support coincide with the displays the extractor can reach.
 
 A universally present register now decodes to the label marginal, so displaying it buys no accuracy.
 Accuracy becomes purchasable only with evidence, up to a ceiling computable before any training, and
@@ -70,7 +99,7 @@ bash run_occ.sh 0 check              # certify the display channel against subgr
 bash run_occ.sh 0 occA_mutag_gsat    # calibrate the classifier, freeze it
 bash run_occ.sh 0 occB_mutag_gsat    # train the extractor against the frozen decoder
 bash run_occ.sh 0 evalo_mutag_gsat   # EST, Fid-, RFid-, Nec, Suf
-bash run_occ.sh 0 certo_mutag_gsat   # degeneration certificate
+bash run_occ.sh 0 certo_mutag_gsat   # the five-tuple certificate
 bash run_pairs.sh 0 1 8              # paired explanation panels, both arms, same graphs
 ```
 
