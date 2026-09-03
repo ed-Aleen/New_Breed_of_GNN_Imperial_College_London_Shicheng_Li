@@ -48,8 +48,8 @@ python -m venv venv && source venv/bin/activate
 pip install -e .          # registers the goodtg entry point
 ```
 
-Use `./goodtg` rather than the bare `goodtg` console script; the wrapper pins imports to this
-checkout. Config paths are passed without the `configs/` prefix.
+Config paths are passed without the `configs/` prefix. If another copy of the package is installed
+in the same environment, set `GOODTG` to a wrapper that pins imports to this checkout.
 
 ## Reproducing the pipeline
 
@@ -67,7 +67,7 @@ bash run_occ.sh 0 certo_mutag_gsat    # five-tuple certificate for the degenerat
 
 Replace `occ*`/`evalo`/`certo` with `base_*`/`evalb`/`certb` for the jointly trained baseline, and
 `mutag_gsat` with any of `mutag_smgnn mnist_gsat mnist_smgnn rbgv_gsat rbgv_smgnn sst2p_gsat
-sst2p_smgnn`. `overnight.sh` and `evals.sh` sequence the full campaign across several machines.
+sst2p_smgnn`.
 
 Paired qualitative panels, same graphs in both arms, paired by graph identity:
 
@@ -95,6 +95,7 @@ bash run_pairs.sh 0 1 8               # all eight cells, seed 1, eight graphs ea
 | `GOOD/kernel/pipelines/` | training loop, display generation, faithfulness metrics |
 | `GOOD/utils/occ.py` | colour refinement, class-level mask sampling, subgraph re-encoding |
 | `configs/final_configs/` | one directory per dataset; `*_OCC.yaml` selects the calibrated pipeline |
+| `figures/` | scripts that draw the mechanism figures |
 | `PORTS.md` | every deviation from the upstream code, with its reason |
 
 ## Datasets

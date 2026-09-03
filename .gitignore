@@ -1,6 +1,6 @@
 .idea/**
 wandb/*
-storage/checkpoints*/
+storage/
 storage/checkpoints/
 storage/OLD_checkpoints/
 storage/ckpts/
@@ -42,3 +42,14 @@ nohup_*.log
 *.bak
 *.bak-*
 __pycache__/
+
+# --- development scaffolding: kept locally, not part of the research release ---
+goodtg                 # local wrapper forcing imports from this checkout
+HEALTH_REPORT.md       # per-seed checkpoint notes
+overnight.sh           # multi-machine campaign orchestration
+evals.sh               # multi-machine evaluation orchestration
+smoke_test.sh          # local smoke test
+train.sh               # local per-job launcher
+run_table4_eval.sh     # launcher for the upstream paper's table
+diag_scores.py         # ad-hoc checkpoint weight dump
+certificate_e3a.py     # superseded by occ_certificate.py

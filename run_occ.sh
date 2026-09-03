@@ -1,4 +1,6 @@
 #!/bin/bash
+# Set GOODTG=${GOODTG:-goodtg} to force imports from this checkout when another copy
+# of the package is installed in the environment.
 # E4 / OCC launcher (clean repo). Usage:
 #   bash run_occ.sh <gpu_idx> <job>
 # Long jobs: run under nohup, e.g.
@@ -66,11 +68,11 @@ case $JOB in
     python occ_stage_a.py --config_path "$(cfg mutag_gsat occ)" --seeds 1 --task train \
       --backbone ACR2 --gpu_idx "$GPU" --save_tag occsmoke --occ_epochs 3
     ;;
-  base_mnist_gsat)  ./goodtg --config_path "$(cfg mnist_gsat)"  --seeds 4/5    --task train --backbone ACR2 --gpu_idx "$GPU" ;;
-  base_rbgv_smgnn)  ./goodtg --config_path "$(cfg rbgv_smgnn)"  --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
-  base_mnist_smgnn) ./goodtg --config_path "$(cfg mnist_smgnn)" --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
-  base_sst2p_gsat)  ./goodtg --config_path "$(cfg sst2p_gsat)"  --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
-  base_sst2p_smgnn) ./goodtg --config_path "$(cfg sst2p_smgnn)" --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
+  base_mnist_gsat)  ${GOODTG:-goodtg} --config_path "$(cfg mnist_gsat)"  --seeds 4/5    --task train --backbone ACR2 --gpu_idx "$GPU" ;;
+  base_rbgv_smgnn)  ${GOODTG:-goodtg} --config_path "$(cfg rbgv_smgnn)"  --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
+  base_mnist_smgnn) ${GOODTG:-goodtg} --config_path "$(cfg mnist_smgnn)" --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
+  base_sst2p_gsat)  ${GOODTG:-goodtg} --config_path "$(cfg sst2p_gsat)"  --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
+  base_sst2p_smgnn) ${GOODTG:-goodtg} --config_path "$(cfg sst2p_smgnn)" --seeds $SEEDS --task train --backbone ACR2 --gpu_idx "$GPU" ;;
   occA_*)
     C=${JOB#occA_}
     python occ_stage_a.py --config_path "$(cfg "$C" occ)" --seeds $SEEDS --task train \
@@ -78,7 +80,7 @@ case $JOB in
     ;;
   occB_*)
     C=${JOB#occB_}
-    ./goodtg --config_path "$(cfg "$C" occ)" --seeds $SEEDS --task train \
+    ${GOODTG:-goodtg} --config_path "$(cfg "$C" occ)" --seeds $SEEDS --task train \
       --backbone ACR2 --gpu_idx "$GPU" --save_tag occ
     ;;
   certb_*|certo_*)
@@ -90,8 +92,8 @@ case $JOB in
   evalb_*|evalo_*)
     C=${JOB#eval?_}
     if [ "${JOB%%_*}" = evalo ]; then CFG=$(cfg "$C" occ); TAG="--save_tag occ"; else CFG=$(cfg "$C"); TAG=""; fi
-    ./goodtg --config_path "$CFG" --seeds $SEEDS --task test --backbone ACR2 --gpu_idx "$GPU" $TAG
-    ./goodtg --config_path "$CFG" --seeds $SEEDS --task eval_metric \
+    ${GOODTG:-goodtg} --config_path "$CFG" --seeds $SEEDS --task test --backbone ACR2 --gpu_idx "$GPU" $TAG
+    ${GOODTG:-goodtg} --config_path "$CFG" --seeds $SEEDS --task eval_metric \
       --metrics "suff_cause/fidm/rfidm/nec/suff" --splits id_val \
       --ratios "$(ratio "$C")" --expval_budget 50 $(membudget "$C") \
       --backbone ACR2 --gpu_idx "$GPU" $TAG
