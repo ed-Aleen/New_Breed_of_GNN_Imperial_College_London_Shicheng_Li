@@ -39,7 +39,7 @@ setuptools.setup(
     license='GPLv3',
     url="https://github.com/divelab/LECI",
     project_urls={
-        "Bug Tracker": "https://github.com/divelab/LECI/issues",
+        "Bug Tracker:": "https://github.com/divelab/LECI/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3.8",
