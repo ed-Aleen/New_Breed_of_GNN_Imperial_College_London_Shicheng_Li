@@ -128,13 +128,3 @@ mnist_smgnn rbgv_gsat rbgv_smgnn sst2p_gsat sst2p_smgnn` for the other cells.
 
 Dataset implementations are in `GOOD/data/good_datasets`; MNIST75sp superpixels come from
 `scripts/extract_mnist_superpixels.py` and RBGV is generated on first use.
-
-## Built on
-
-The code released with Azzolin et al., *GNN Explanations that do not Explain and How to find Them*,
-ICLR 2026 ([paper](https://arxiv.org/abs/2601.20815),
-[repo](https://github.com/steveazzolin/gnn_deg_expl)), itself built on
-[GOOD](https://github.com/divelab/GOOD). The calibration design is transplanted from Jethani et al.,
-*Have We Learned to Explain?*, AISTATS 2021 ([REAL-X](https://arxiv.org/abs/2103.01890)); the
-colour-class granularity, the certificate and the pre-registered ceiling are contributed here.
-`README.upstream.md` keeps the upstream text.
